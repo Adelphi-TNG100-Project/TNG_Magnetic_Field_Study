@@ -2,10 +2,15 @@
 import numpy as np
 import scipy.stats as st
 import matplotlib.pyplot as plt
+from matplotlib.legend_handler import HandlerTuple
+from utilities.bin_data import removeNans
 
 
 
-def plot_gen(isoCen_mass, isoCen_bfld, nonIsoCen_mass, nonIsoCen_bfld, preInf_mass, preInf_bfld, postInf_mass, postInf_bfld, filename):
+def plot_gen(isoCen_mass, isoCen_bfld, nonIsoCen_mass, nonIsoCen_bfld, 
+             preInf_mass, preInf_bfld, postInf_mass, postInf_bfld, filename, 
+             log=True, ylabel="$log_{(10)}$(Magnetic Field Strength) (MicroGauss)", xlabel="$log_{(10)}(Mass) M_* (M_\odot)$",
+             title=""):
     #plot isolated centrals
     plt.scatter(isoCen_mass, isoCen_bfld, color='blue', label='Isolated Central Galaxies', marker='.')
 
@@ -13,21 +18,37 @@ def plot_gen(isoCen_mass, isoCen_bfld, nonIsoCen_mass, nonIsoCen_bfld, preInf_ma
     plt.scatter(nonIsoCen_mass, nonIsoCen_bfld, color='red', label='Non-Isolated Central Galaxies', marker='.')
 
     #plot pre-infall satellites
-    plt.scatter(preInf_mass, preInf_bfld, color='green', label='Pre-Infall Satellites', marker='*')
+    plt.scatter(preInf_mass, preInf_bfld, color='green', label='Pre-Infall Satellite Galaxies', marker='*')
 
     #plot post-infall satellites
-    plt.scatter(postInf_mass, postInf_bfld, color='purple', label='Post-Infall Satellites', marker='2')
+    plt.scatter(postInf_mass, postInf_bfld, color='purple', label='Post-Infall Satellite Galaxies', marker='2')
 
-    plt.xscale('log')
-    plt.yscale('log')
+    if log:
+        plt.xscale('log')
+        plt.yscale('log')
 
     # Add labels and title
-    plt.xlabel('Mass')
-    plt.ylabel('B-field')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
     #plt.title('Scatter Plot of Two Groups')
+    
+    if title != "":
+        plt.title(title)
 
     # Add a legend
-    plt.legend()
+    # plt.legend()
+    
+    handles, labels = plt.gca().get_legend_handles_labels()
+    
+    # Wrap each handle in a tuple to force reordering
+    tuple_handles = [(h,) for h in handles]
+
+    # Set custom legend with swapped label-marker order
+    plt.legend(tuple_handles, labels, handler_map={tuple: HandlerTuple(ndivide=None)})
+
+    
+    #change y upper limit
+    plt.ylim(min(isoCen_bfld) - 0.5, max(postInf_bfld) + 1)
 
 
     #save plot
@@ -47,12 +68,16 @@ def plot_wcontour(isoCen_mass, isoCen_bfld,
                   nonIsoCen_mass_er, nonIsoCen_bfld_er, 
                   preInf_mass_er, preInf_bfld_er, 
                   postInf_mass_er, postInf_bfld_er, 
-                  filename):
-    xdat = preInf_mass
-    ydat = preInf_bfld
+                  preInf_mass_nonBin, preInf_bfld_nonBin,
+                  filename, log=True,  
+                  ylabel="$log_{10}$(<B> / $\mu G$)", xlabel="$log_{10}$($M_*$ / $M_\odot$)",
+                  title="", fs=12, contAlph=0.2, alph = 0.3):
+    # xdat = preInf_mass_nonBin
+    # ydat = preInf_bfld_nonBin
+    xdat, ydat = removeNans(preInf_mass_nonBin, preInf_bfld_nonBin)
     concol = 'green'
     linewidth = 0.75
-    alph = 0.5
+    # alph = 0.5
     
     binsize=100
     deltaX=(max(xdat)-min(xdat))/binsize
@@ -80,37 +105,68 @@ def plot_wcontour(isoCen_mass, isoCen_bfld,
     
     
     #contour
-    plt.contour(xx,yy,Z,colors=concol,linewidths=linewidth,levels=7,alpha=alph)
+    plt.contour(xx,yy,Z,colors=concol,linewidths=linewidth,levels=7,alpha=contAlph)
     
 
     #plot non-isolated centrals
-    plt.errorbar(nonIsoCen_mass, nonIsoCen_bfld, xerr=nonIsoCen_mass_er, yerr=nonIsoCen_bfld_er, fmt='.', color='red', label='Non-Isolated Central Galaxies', elinewidth = 0.2)
+    nonIsoBar = plt.errorbar(nonIsoCen_mass, nonIsoCen_bfld, xerr=nonIsoCen_mass_er, yerr=nonIsoCen_bfld_er, fmt='.', color='red', label='Non-Isolated Central Galaxies', elinewidth = 0.2)
     #plt.scatter(nonIsoCen_mass, nonIsoCen_bfld, color='red', label='Non-Isolated Central Galaxies', marker='.')
     
+    # Manually Adjust Error Bar Transparency
+    for bar in nonIsoBar[2]:  # bars[2] contains the error bar lines
+        bar.set_alpha(alph)  # Set transparency for error bars only
+    
     #plot isolated centrals include error
-    plt.errorbar(isoCen_mass, isoCen_bfld, xerr=isoCen_mass_er, yerr=isoCen_bfld_er, fmt='.', color='blue', label='Isolated Central Galaxies', elinewidth = 0.2)
+    isoBar = plt.errorbar(isoCen_mass, isoCen_bfld, xerr=isoCen_mass_er, yerr=isoCen_bfld_er, fmt='.', color='blue', label='Isolated Central Galaxies', elinewidth = 0.2)
     #plt.scatter(isoCen_mass, isoCen_bfld, color='blue', label='Isolated Central Galaxies', marker='.')
 
+    # Manually Adjust Error Bar Transparency
+    for bar in isoBar[2]:  # bars[2] contains the error bar lines
+        bar.set_alpha(alph)  # Set transparency for error bars only
+
     #plot pre-infall satellites
-    plt.errorbar(preInf_mass, preInf_bfld, xerr=preInf_mass_er, yerr=preInf_bfld_er, fmt='*', color='green', label='Pre-Infall Satellites', elinewidth = 0.2)
+    preInfBar = plt.errorbar(preInf_mass, preInf_bfld, xerr=preInf_mass_er, yerr=preInf_bfld_er, fmt='*', color='green', label='Pre-Infall Satellite Galaxies', elinewidth = 0.2)
     #plt.scatter(preInf_mass, preInf_bfld, color='green', label='Pre-Infall Satellites', marker='*')
 
+    # Manually Adjust Error Bar Transparency
+    for bar in preInfBar[2]:  # bars[2] contains the error bar lines
+        bar.set_alpha(alph)  # Set transparency for error bars only
+
     #plot post-infall satellites
-    plt.errorbar(postInf_mass, postInf_bfld, xerr=postInf_mass_er, yerr=postInf_bfld_er, fmt='2', color='purple', label='Post-Infall Satellites', elinewidth = 0.2)
+    postInfBar = plt.errorbar(postInf_mass, postInf_bfld, xerr=postInf_mass_er, yerr=postInf_bfld_er, fmt='2', color='purple', label='Post-Infall Satellite Galaxies', elinewidth = 0.2)
     #plt.scatter(postInf_mass, postInf_bfld, color='purple', label='Post-Infall Satellites', marker='2')
     
-
-    plt.xscale('log')
-    plt.yscale('log')
+    # Manually Adjust Error Bar Transparency
+    for bar in postInfBar[2]:  # bars[2] contains the error bar lines
+        bar.set_alpha(alph)  # Set transparency for error bars only
+    
+    if log:
+        plt.xscale('log')
+        plt.yscale('log')
 
     # Add labels and title
-    plt.xlabel('Mass $M_* (M_\odot)$')
-    plt.ylabel('Magnetic Field Strength (Gauss)')
+    plt.xlabel(xlabel, fontsize=fs)
+    plt.ylabel(ylabel, fontsize=fs)
     #plt.title('Scatter Plot of Two Groups')
+    
+    
+    # for ax in axs:
+    #     ax.tick_params(axis='both', which='major', labelsize=fs, direction='in', top=True, right=True, left = True, bottom = True, length =7)
+    #     ax.tick_params(axis='both', which='minor', labelsize=fs, direction='in', top=True, right=True, left = True, bottom =True)
+    #     ax.minorticks_on()
+    plt.tick_params(axis='both', which='major', labelsize=fs, direction='in', top=True, right=True, left = True, bottom = True, length =7)
+    plt.tick_params(axis='both', which='minor', labelsize=fs, direction='in', top=True, right=True, left = True, bottom =True)
+    plt.minorticks_on()
+    # plt.yaxis.set_tick_params(which='both', labelright=True)
+    
+    
+    
+    if title != "":
+        plt.title(title)
 
     # Add a legend
-    #plt.legend()
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
+    plt.legend()
+    # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
 
 
     #save plot
