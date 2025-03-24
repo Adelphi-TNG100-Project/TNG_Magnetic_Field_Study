@@ -21,7 +21,7 @@ def bin_data(data, bin_size):
         binned_data.append(avg(data[i:i+bin_size]))
         st_error.append(stdev(data[i:i+bin_size]))
         sem_error.append(stdev(data[i:i+bin_size])/np.sqrt(len(data[i:i+bin_size])))
-    return binned_data, st_error, sem_error
+    return binned_data, st_error
 
 #given mass array and bfld array, sort by mass but change bfld based on sorting mass
 def sort_mass(mass, bfld, sfri="", removeNan=True):
