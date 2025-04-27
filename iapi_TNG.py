@@ -10,8 +10,14 @@ import numpy as np
 import h5py
 import os.path
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 api_key = os.getenv("API_KEY")
+
+print(api_key)
 
 baseUrl = 'http://www.tng-project.org/api/'
 headers = {"api-key" : api_key}
