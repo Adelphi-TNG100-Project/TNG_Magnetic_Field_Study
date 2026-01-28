@@ -7,17 +7,14 @@ Modified by Bryanne McDonough from materials provided by the TNG team
 This was Edited By Mariane Diby for collecting her own set of data. 
 """
 
-import iapi_TNG as iapi
-#this package contains useful functions for downloading the neccessary data
-#make sure you have edited iapi_TNG.py to include your personal API key
+import requests
 import numpy as np
-import h5py #most TNG data is downloaded as hdf5 files
-import matplotlib.pyplot as plt
+import h5py
 import os.path
-
+import os
 
 baseUrl = 'http://www.tng-project.org/api/'
-headers = {"api-key" : "ADD YOUR API HERE"}
+headers = {"api-key" : "f47c8519062d1 99613c99b12244d62ab"}
 
 def get(path, params=None, fName='temp'): # gets data from url, saves to file
     """
